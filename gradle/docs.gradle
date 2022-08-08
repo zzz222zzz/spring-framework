@@ -113,35 +113,35 @@ asciidoctorj {
  * Generate the Spring Framework Reference documentation from "src/docs/asciidoc"
  * in "build/docs/ref-docs/html5".
  */
-//asciidoctor {
-//	baseDirFollowsSourceDir()
-//	configurations 'asciidoctorExt'
-//	sources {
-//		include '*.adoc'
-//	}
-//	outputDir "$buildDir/docs/ref-docs/html5"
-//	logDocuments = true
-//	resources {
-//		from(sourceDir) {
-//			include 'images/*.png', 'css/**', 'js/**'
-//		}
-//		from extractDocResources
-//	}
-//}
+asciidoctor {
+	baseDirFollowsSourceDir()
+	configurations 'asciidoctorExt'
+	sources {
+		include '*.adoc'
+	}
+	outputDir "$buildDir/docs/ref-docs/html5"
+	logDocuments = true
+	resources {
+		from(sourceDir) {
+			include 'images/*.png', 'css/**', 'js/**'
+		}
+		from extractDocResources
+	}
+}
 
 /**
  * Generate the Spring Framework Reference documentation from "src/docs/asciidoc"
  * in "build/docs/ref-docs/pdf".
  */
-//asciidoctorPdf {
-//	baseDirFollowsSourceDir()
-//	configurations 'asciidoctorExt'
-//	sources {
-//		include '*.adoc'
-//	}
-//	outputDir "$buildDir/docs/ref-docs/pdf"
-//	logDocuments = true
-//}
+asciidoctorPdf {
+	baseDirFollowsSourceDir()
+	configurations 'asciidoctorExt'
+	sources {
+		include '*.adoc'
+	}
+	outputDir "$buildDir/docs/ref-docs/pdf"
+	logDocuments = true
+}
 
 /**
  * Zip all docs (API and reference) into a single archive
