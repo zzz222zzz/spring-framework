@@ -608,8 +608,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				throw (BeanCreationException) ex;
 			}
 			else {
-				throw new BeanCreationException(
-						mbd.getResourceDescription(), beanName, "Initialization of bean failed", ex);
+				throw new BeanCreationException(mbd.getResourceDescription(), beanName, ex.getMessage(), ex);
 			}
 		}
 
@@ -1216,6 +1215,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		return bw;
 	}
 
+	@Nullable
 	private Object obtainInstanceFromSupplier(Supplier<?> supplier, String beanName) {
 		String outerBean = this.currentlyCreatedBean.get();
 		this.currentlyCreatedBean.set(beanName);
@@ -1302,8 +1302,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return bw;
 		}
 		catch (Throwable ex) {
-			throw new BeanCreationException(
-					mbd.getResourceDescription(), beanName, "Instantiation of bean failed", ex);
+			throw new BeanCreationException(mbd.getResourceDescription(), beanName, ex.getMessage(), ex);
 		}
 	}
 
@@ -1473,7 +1472,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			try {
 				PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
 				// Don't try autowiring by type for type Object: never makes sense,
-				// even if it technically is a unsatisfied, non-simple property.
+				// even if it technically is an unsatisfied, non-simple property.
 				if (Object.class != pd.getPropertyType()) {
 					MethodParameter methodParam = BeanUtils.getWriteMethodParameter(pd);
 					// Do not allow eager init for type matching in case of a prioritized post-processor.
@@ -1699,8 +1698,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			bw.setPropertyValues(new MutablePropertyValues(deepCopy));
 		}
 		catch (BeansException ex) {
-			throw new BeanCreationException(
-					mbd.getResourceDescription(), beanName, "Error setting property values", ex);
+			throw new BeanCreationException(mbd.getResourceDescription(), beanName, ex.getMessage(), ex);
 		}
 	}
 
@@ -1752,8 +1750,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		catch (Throwable ex) {
 			throw new BeanCreationException(
-					(mbd != null ? mbd.getResourceDescription() : null),
-					beanName, "Invocation of init method failed", ex);
+					(mbd != null ? mbd.getResourceDescription() : null), beanName, ex.getMessage(), ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);

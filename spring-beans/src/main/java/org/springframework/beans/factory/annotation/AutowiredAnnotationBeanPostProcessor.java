@@ -41,6 +41,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aot.generate.AccessVisibility;
+import org.springframework.aot.generate.GeneratedClass;
+import org.springframework.aot.generate.GeneratedMethod;
 import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.generate.MethodReference;
 import org.springframework.aot.hint.ExecutableHint;
@@ -79,11 +81,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;
-import org.springframework.javapoet.ClassName;
 import org.springframework.javapoet.CodeBlock;
-import org.springframework.javapoet.JavaFile;
-import org.springframework.javapoet.MethodSpec;
-import org.springframework.javapoet.TypeSpec;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -883,8 +881,6 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 	 */
 	private static class AotContribution implements BeanRegistrationAotContribution {
 
-		private static final String APPLY_METHOD = "apply";
-
 		private static final String REGISTERED_BEAN_PARAMETER = "registeredBean";
 
 		private static final String INSTANCE_PARAMETER = "instance";
@@ -910,30 +906,22 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		@Override
 		public void applyTo(GenerationContext generationContext,
 				BeanRegistrationCode beanRegistrationCode) {
-
-			ClassName className = generationContext.getClassNameGenerator()
-					.generateClassName(this.target, "Autowiring");
-			TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className);
-			classBuilder.addJavadoc("Autowiring for {@link $T}.", this.target);
-			classBuilder.addModifiers(javax.lang.model.element.Modifier.PUBLIC);
-			classBuilder.addMethod(generateMethod(generationContext.getRuntimeHints()));
-			JavaFile javaFile = JavaFile
-					.builder(className.packageName(), classBuilder.build()).build();
-			generationContext.getGeneratedFiles().addSourceFile(javaFile);
+			GeneratedClass generatedClass = generationContext.getGeneratedClasses()
+					.addForFeatureComponent("Autowiring", this.target, type -> {
+						type.addJavadoc("Autowiring for {@link $T}.", this.target);
+						type.addModifiers(javax.lang.model.element.Modifier.PUBLIC);
+					});
+			GeneratedMethod generateMethod = generatedClass.getMethods().add("apply", method -> {
+				method.addJavadoc("Apply the autowiring.");
+				method.addModifiers(javax.lang.model.element.Modifier.PUBLIC,
+						javax.lang.model.element.Modifier.STATIC);
+				method.addParameter(RegisteredBean.class, REGISTERED_BEAN_PARAMETER);
+				method.addParameter(this.target, INSTANCE_PARAMETER);
+				method.returns(this.target);
+				method.addCode(generateMethodCode(generationContext.getRuntimeHints()));
+			});
 			beanRegistrationCode.addInstancePostProcessor(
-					MethodReference.ofStatic(className, APPLY_METHOD));
-		}
-
-		private MethodSpec generateMethod(RuntimeHints hints) {
-			MethodSpec.Builder builder = MethodSpec.methodBuilder(APPLY_METHOD);
-			builder.addJavadoc("Apply the autowiring.");
-			builder.addModifiers(javax.lang.model.element.Modifier.PUBLIC,
-					javax.lang.model.element.Modifier.STATIC);
-			builder.addParameter(RegisteredBean.class, REGISTERED_BEAN_PARAMETER);
-			builder.addParameter(this.target, INSTANCE_PARAMETER);
-			builder.returns(this.target);
-			builder.addCode(generateMethodCode(hints));
-			return builder.build();
+					MethodReference.ofStatic(generatedClass.getName(), generateMethod.getName()));
 		}
 
 		private CodeBlock generateMethodCode(RuntimeHints hints) {
@@ -964,13 +952,13 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		private CodeBlock generateMethodStatementForField(Field field, boolean required,
 				RuntimeHints hints) {
 
+			hints.reflection().registerField(field, ALLOW_WRITE);
 			CodeBlock resolver = CodeBlock.of("$T.$L($S)",
 					AutowiredFieldValueResolver.class,
 					(!required) ? "forField" : "forRequiredField", field.getName());
 			AccessVisibility visibility = AccessVisibility.forMember(field);
 			if (visibility == AccessVisibility.PRIVATE
 					|| visibility == AccessVisibility.PROTECTED) {
-				hints.reflection().registerField(field, ALLOW_WRITE);
 				return CodeBlock.of("$L.resolveAndSet($L, $L)", resolver,
 						REGISTERED_BEAN_PARAMETER, INSTANCE_PARAMETER);
 			}

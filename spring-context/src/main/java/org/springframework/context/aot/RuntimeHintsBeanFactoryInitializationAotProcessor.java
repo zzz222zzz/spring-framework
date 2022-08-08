@@ -28,7 +28,7 @@ import org.springframework.aot.generate.GenerationContext;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.aot.AotFactoriesLoader;
+import org.springframework.beans.factory.aot.AotServices;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationAotContribution;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationCode;
@@ -56,9 +56,8 @@ class RuntimeHintsBeanFactoryInitializationAotProcessor
 	@Override
 	public BeanFactoryInitializationAotContribution processAheadOfTime(
 			ConfigurableListableBeanFactory beanFactory) {
-		AotFactoriesLoader loader = new AotFactoriesLoader(beanFactory);
-		Map<Class<? extends RuntimeHintsRegistrar>, RuntimeHintsRegistrar> registrars = loader
-				.load(RuntimeHintsRegistrar.class).stream()
+		Map<Class<? extends RuntimeHintsRegistrar>, RuntimeHintsRegistrar> registrars = AotServices
+				.factories(beanFactory.getBeanClassLoader()).load(RuntimeHintsRegistrar.class).stream()
 				.collect(LinkedHashMap::new, (map, item) -> map.put(item.getClass(), item), Map::putAll);
 		extractFromBeanFactory(beanFactory).forEach(registrarClass ->
 				registrars.computeIfAbsent(registrarClass, BeanUtils::instantiateClass));
@@ -84,9 +83,11 @@ class RuntimeHintsBeanFactoryInitializationAotProcessor
 
 		Set<Class<? extends RuntimeHintsRegistrar>> registrars = new LinkedHashSet<>();
 		for (Class<? extends RuntimeHintsRegistrar> registrarClass : annotation.value()) {
-			logger.trace(
-					LogMessage.format("Loaded [%s] registrar from annotated bean [%s]",
-							registrarClass.getCanonicalName(), beanName));
+			if (logger.isTraceEnabled()) {
+				logger.trace(
+						LogMessage.format("Loaded [%s] registrar from annotated bean [%s]",
+								registrarClass.getCanonicalName(), beanName));
+			}
 			registrars.add(registrarClass);
 		}
 		return registrars;
@@ -115,9 +116,11 @@ class RuntimeHintsBeanFactoryInitializationAotProcessor
 				BeanFactoryInitializationCode beanFactoryInitializationCode) {
 			RuntimeHints hints = generationContext.getRuntimeHints();
 			this.registrars.forEach(registrar -> {
-				logger.trace(LogMessage.format(
-						"Processing RuntimeHints contribution from [%s]",
-						registrar.getClass().getCanonicalName()));
+				if (logger.isTraceEnabled()) {
+					logger.trace(LogMessage.format(
+							"Processing RuntimeHints contribution from [%s]",
+							registrar.getClass().getCanonicalName()));
+				}
 				registrar.registerHints(hints, this.beanClassLoader);
 			});
 		}
