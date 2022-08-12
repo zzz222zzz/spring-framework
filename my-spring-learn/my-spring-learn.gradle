@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+
+group 'org.springframework'
+version '6.0.0-SNAPSHOT'
+
+sourceCompatibility=1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    /**
+     * 本项目A 引入B B依赖C
+     * api 嵌套依赖BC都引入  implementation只引入B
+     * 使用api需要引入plugin java-library
+     */
+    api(project(":spring-context"))
+//    // Aspect相关注解的依赖
+//    optional("org.aspectj:aspectjweaver")
+}
+
+test {
+    useJUnitPlatform()
+}

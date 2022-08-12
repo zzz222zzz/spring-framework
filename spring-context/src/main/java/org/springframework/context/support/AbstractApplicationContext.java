@@ -556,13 +556,28 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
 
 			// Prepare this context for refreshing.
-			// 打印日志
+			/**
+			 * 1.切换为状态为Active,打印日志
+			 * 2.初始化servletContext servletConfig 放入propertySource容器
+			 * 3.校验必要参数是否为空
+			 * 4.ApplicationListeners
+			 * 5.ApplicationEvents
+			 */
+
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			/**
+			 * 1.销毁原有的bean，关闭beanfactory
+			 * 2.重新创建beanfactory并返回
+			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			/**
+			 * 1.设置类加载后置处理器(post-processors)
+			 *
+			 */
 			prepareBeanFactory(beanFactory);
 
 			try {
@@ -590,6 +605,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				/**
+				 * 初始化剩余单例非懒加载bean
+				 */
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -641,13 +659,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
+		// 填充servletConfig servletContext 放入spring容器的PropertySources 容器
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
 		// see ConfigurablePropertyResolver#setRequiredProperties
+		// 校验是否有必输值为空
 		getEnvironment().validateRequiredProperties();
 
 		// Store pre-refresh ApplicationListeners...
+		// ApplicationListeners
 		if (this.earlyApplicationListeners == null) {
 			this.earlyApplicationListeners = new LinkedHashSet<>(this.applicationListeners);
 		}
@@ -907,6 +928,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Register a default embedded value resolver if no BeanFactoryPostProcessor
 		// (such as a PropertySourcesPlaceholderConfigurer bean) registered any before:
 		// at this point, primarily for resolution in annotation attribute values.
+		/**
+		 * 如果之前没有注册BeanFactory后处理器（如PropertySourcePlaceHolderConfigurer bean），
+		 * 则注册默认嵌入值解析器：此时，主要用于注释属性值中的解析。
+		 */
 		if (!beanFactory.hasEmbeddedValueResolver()) {
 			beanFactory.addEmbeddedValueResolver(strVal -> getEnvironment().resolvePlaceholders(strVal));
 		}
