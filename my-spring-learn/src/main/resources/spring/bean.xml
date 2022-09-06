@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="carFactoryBean" class="FactoryBeanTest.Support.CarFactoryBean">
+		<property name="carInfo" value="aodi,10"/>
+		<!-- collaborators and configuration for this bean go here -->
+	</bean>
+
+	<bean id="car" class="FactoryBeanTest.entity.Car">
+		<property name="name" value="baoma"/>
+	</bean>
+
+	<bean id="user" class="FactoryBeanTest.entity.UserInfo">
+		<property name="name" value="zm"/>
+	</bean>
+
+	<!-- more bean definitions go here -->
+
+</beans>

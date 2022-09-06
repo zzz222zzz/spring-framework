@@ -271,8 +271,12 @@ configure([rootProject] + javaProjects) { project ->
 
 	apply plugin: "java"
 	apply plugin: "java-test-fixtures"
+	// 引入了checkstyle 就不需要再定义task checkstyle 任务了
+	// 如果需要特别配置 使用 tasks.withType(Checkstyle)这种形式
 	apply plugin: "checkstyle"
 	apply plugin: 'org.springframework.build.compile'
+
+	//	引入其他gradle脚本
 	apply from: "${rootDir}/gradle/toolchains.gradle"
 	apply from: "${rootDir}/gradle/ide.gradle"
 
@@ -306,6 +310,7 @@ configure([rootProject] + javaProjects) { project ->
 	checkstyle {
 		toolVersion = "10.3.1"
 		configDirectory.set(rootProject.file("src/checkstyle"))
+//		ignoreFailures = true
 	}
 
 	dependencies {
@@ -399,4 +404,9 @@ configure(rootProject) {
 			}
 		}
 	}
+}
+// checkstyle 排除
+tasks.withType(Checkstyle) {
+	checkstyleMain.exclude '**/my-spring-learn/src/main/java/**'
+	exclude '**/my-spring-learn/src/main/java/**'
 }

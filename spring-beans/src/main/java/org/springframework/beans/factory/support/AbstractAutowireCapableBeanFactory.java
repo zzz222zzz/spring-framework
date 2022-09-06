@@ -438,6 +438,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object result = existingBean;
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessAfterInitialization(result, beanName);
+			// 空值Bean 直接返回不走后续的processor??
 			if (current == null) {
 				return result;
 			}
@@ -505,6 +506,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Prepare method overrides.
+		// 处理重载方法
 		try {
 			mbdToUse.prepareMethodOverrides();
 		}
@@ -515,7 +517,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
+			// 让BeanPostProcessors有机会返回代理而不是目标bean实例。AOP
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
+			// 在真正调用doCreate方法创建bean的实例前使用了这样一个方法,如果提前创建，就返回。
 			if (bean != null) {
 				return bean;
 			}
@@ -527,7 +531,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			/**
-			 * 实例化
+			 * 真正实例化
 			 */
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
@@ -1190,7 +1194,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Candidate constructors for autowiring?
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
-				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
+				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {//返回是否为此bean定义了构造函数参数值。
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 
